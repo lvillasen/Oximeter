@@ -1,0 +1,622 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, user-scalable=no,initial-scale=1.0,maximum-scale=1.0,minimum-scale=1.0"
+    />
+    <title>PA</title>
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({ TeX: { extensions: ["color.js"] }});
+    </script>
+   
+  <script src="https://cdn.plot.ly/plotly-3.5.0.min.js"></script>
+ 
+  
+  <script
+      type="text/javascript"
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"
+    ></script>
+    
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <link rel="stylesheet" href="./OXI2.css" />
+  </head>
+  <>
+    <div
+      class="block_container"
+      style="background-color: #00b5e2; margin-left: 10%; margin-right: 10%"
+    >
+      <p></p>
+      <p></p>
+      <br />
+
+      <p></p>
+      <p></p>
+
+      <h1>Oxímetro de Pulso Digital</h1>
+      <h2>CIIEC-BUAP</h2>
+      <p
+        style="
+          font-size: 30px;
+
+          text-align: right;
+
+          margin-right: 0;
+        "
+      >
+        08 de Mayo, 2026
+      </p>
+      <p style="font-size: 30px; text-align: right; margin-right: 0">
+        <a href="https://github.com/lvillasen/PPG">Código Fuente</a>
+      </p>
+      <hr />
+      <h3>
+Se describe la construcción y operación de un oxímetro digital basado en un sensor MAX30102 conectado a un ESP32, capaz de adquirir y procesar en tiempo real señales fotopletismográficas (PPG) obtenidas mediante LEDs rojo e infrarrojo. El sistema permite estimar la saturación de oxígeno en sangre (SpO₂) y la frecuencia cardiaca a partir del análisis de la absorción óptica pulsátil del tejido. Además, el dispositivo captura la forma completa de la onda PPG, permitiendo la extracción de parámetros fisiológicos relevantes, como la variabilidad de la frecuencia cardiaca (HRV), características temporales y morfológicas del pulso y otros indicadores asociados al estado cardiovascular y hemodinámico, lo que posibilita su aplicación en monitoreo no invasivo y análisis avanzado de señales biomédicas.
+      </h3>
+      <hr />
+      <button class="new_styled" aria-pressed="false"
+      onclick="disclaimerBlock()">
+        Descargo de Responsabilidad
+      </button>
+      <br />
+      <div
+      id="disclaimerBlock"
+        style="
+          max-width: 800px;
+          margin: auto;
+          font-family: Arial, sans-serif;
+          line-height: 1.6;
+        "
+      >
+        <h2 style="text-align: center">
+          Términos de Uso y Descargo de Responsabilidad
+        </h2>
+
+        <p>
+          El <strong>Oxímetro Digital</strong> es un
+          sistema desarrollado con fines exclusivamente
+          <strong>educativos y de investigación</strong>. Este dispositivo no ha
+          sido certificado como equipo médico ni cumple con normativas
+          regulatorias para uso clínico.
+        </p>
+
+        <p>
+          La información proporcionada por el sistema, incluyendo valores de saturación de oxígeno en sangre (SpO₂) y la frecuencia cardiaca, 
+          es de carácter
+          <strong>experimental</strong> y puede contener errores o
+          inexactitudes.
+        </p>
+
+        <p><strong>Por lo tanto:</strong></p>
+
+        <ul>
+          <li>
+            No debe utilizarse para diagnóstico médico, tratamiento o monitoreo
+            clínico.
+          </li>
+          <li>
+            No debe emplearse para la toma de decisiones médicas o ajuste de
+            medicación.
+          </li>
+          <li>
+            No sustituye la evaluación, diagnóstico ni recomendaciones de un
+            profesional de la salud calificado.
+          </li>
+        </ul>
+
+        <p>
+          El uso de este sistema es bajo la
+          <strong>responsabilidad del usuario</strong>. Los desarrolladores no
+          se hacen responsables por cualquier daño, perjuicio o consecuencia
+          derivada del uso indebido de la información generada por el
+          dispositivo.
+        </p>
+
+        <p>
+          Se recomienda que cualquier medición de la saturación de oxígeno en sangre (SpO₂) y de la frecuencia cardiaca con fines
+          clínicos se realice utilizando dispositivos certificados y bajo
+          supervisión médica.
+        </p>
+      </div>
+      <hr />
+
+      <button
+        class="new_styled"
+        id="toggleAbout"
+        aria-pressed="false"
+        onclick="aboutBlock()"
+      >
+        ¿Cómo Funciona y para qué Sirve?
+      </button>
+      <br />
+      <div id="aboutBlock">
+
+        <h3>¿Cómo funciona un Oxímetro Digital?</h3>
+
+<ol>
+  <li>
+    <strong>Emisión de luz mediante LEDs:</strong>
+    <ul>
+      <li>
+        El oxímetro utiliza LEDs rojo e infrarrojo integrados en un sensor como
+        el <strong>MAX30102</strong>.
+      </li>
+      <li>
+        El sensor se coloca en contacto con la piel, normalmente en el dedo.
+      </li>
+      <li>
+        Los LEDs iluminan el tejido y los vasos sanguíneos con diferentes
+        longitudes de onda.
+      </li>
+    </ul>
+  </li>
+
+  <li>
+    <strong>Interacción de la luz con la sangre:</strong>
+    <ul>
+      <li>
+        La hemoglobina oxigenada y desoxigenada absorben la luz de manera
+        diferente.
+      </li>
+      <li>
+        Parte de la luz es absorbida y otra parte es reflejada hacia el
+        fotodetector.
+      </li>
+      <li>
+        La cantidad de luz detectada cambia con cada latido cardíaco debido al
+        flujo pulsátil de sangre arterial.
+      </li>
+    </ul>
+  </li>
+
+  <li>
+    <strong>Detección de la señal óptica:</strong>
+    <ul>
+      <li>
+        Un fotodetector integrado mide la intensidad de la luz reflejada.
+      </li>
+      <li>
+        El sensor convierte estas variaciones ópticas en señales digitales.
+      </li>
+      <li>
+        Un microcontrolador como el <strong>ESP32</strong> procesa la información
+        en tiempo real.
+      </li>
+    </ul>
+  </li>
+
+  <li>
+    <strong>Obtención de la señal PPG:</strong>
+    <ul>
+      <li>
+        <strong>Componente AC (pulsátil):</strong>
+        cambia con cada latido cardíaco y representa la onda de pulso arterial.
+      </li>
+      <li>
+        <strong>Componente DC (lenta):</strong>
+        depende del tejido, respiración, perfusión y otros factores fisiológicos.
+      </li>
+    </ul>
+  </li>
+
+  <li>
+    <strong>Cálculo de SpO₂ y frecuencia cardíaca:</strong>
+    <ul>
+      <li>
+        Comparando las señales roja e infrarroja se estima la saturación de
+        oxígeno en sangre (SpO₂).
+      </li>
+      <li>
+        A partir de los pulsos detectados también se calcula la frecuencia
+        cardíaca en latidos por minuto (LPM).
+      </li>
+    </ul>
+  </li>
+</ol>
+
+<h3>Tipos de sensores ópticos PPG</h3>
+
+<ul>
+  <li>
+    <strong>Transmisivo:</strong>
+    la luz atraviesa el tejido y es detectada al lado opuesto
+    (ejemplo: oxímetros de dedo).
+  </li>
+
+  <li>
+    <strong>Reflectivo:</strong>
+    el fotodetector se encuentra junto a los LEDs y mide la luz reflejada
+    (ejemplo: relojes inteligentes y sensores MAX30102).
+  </li>
+</ul>
+
+<h3>Principales aplicaciones de un Oxímetro Digital</h3>
+
+<ol>
+  <li>
+    <strong>Medición de saturación de oxígeno (SpO₂).</strong>
+  </li>
+
+  <li>
+    <strong>Frecuencia cardíaca:</strong>
+    cálculo del pulso en latidos por minuto.
+  </li>
+
+  <li>
+    <strong>Variabilidad de la frecuencia cardíaca (HRV):</strong>
+    análisis de los intervalos entre pulsos.
+  </li>
+
+  <li>
+    <strong>Análisis de la onda PPG:</strong>
+    estudio de características temporales y morfológicas del pulso arterial.
+  </li>
+
+  <li>
+    <strong>Monitoreo cardiovascular no invasivo.</strong>
+  </li>
+
+  <li>
+    <strong>Monitorización durante el sueño y ejercicio.</strong>
+  </li>
+
+  <li>
+    <strong>Investigación biomédica y educativa:</strong>
+    desarrollo de sistemas portátiles basados en sensores ópticos y ESP32.
+  </li>
+</ol>
+
+<center>
+
+  <figure style="width: 80%">
+
+    <img
+
+      src="datos.png"
+
+      style="
+
+        width: 100%;
+
+        border: 2px solid black;
+
+        border-radius: 6px;
+
+      "
+
+    />
+
+    <figcaption
+
+      style="
+
+        margin-top: 8px;
+
+        font-style: italic;
+
+        font-size: 16px;
+
+      "
+
+    >
+
+      Figura 1. Ejemplo de datos procesados con el oxímetro.
+
+    </figcaption>
+
+  </figure>
+
+</center>
+      </div>
+
+      <hr />
+      <button
+        class="new_styled"
+        id="toggleBuild"
+        aria-pressed="false"
+        onclick="buildBlock()"
+      >
+        Construye tu Propio Equipo
+      </button>
+      <br />
+      <div id="buildBlock">
+        <h3>
+          Se requiere comprar un sensor MAX30102 y un
+          microcontrolador ESP32, como se muestra en la figura siguiente:
+        </h3>
+        <center>
+
+  <figure style="width: 80%">
+
+    <img
+
+      src="oxi.png"
+
+      style="
+
+        width: 100%;
+
+        border: 2px solid black;
+
+        border-radius: 6px;
+
+      "
+
+    />
+
+    <figcaption
+
+      style="
+
+        margin-top: 8px;
+
+        font-style: italic;
+
+        font-size: 16px;
+
+      "
+
+    >
+
+      Figura 2. Componentes que se requieren para armar el Oxímetro digital basado en sensor MAX30102 y ESP32.
+
+    </figcaption>
+
+  </figure>
+
+</center>
+<br>
+<center>
+
+  <figure style="width: 80%">
+
+    <img
+      src="foto.png"
+
+      style="
+
+        width: 100%;
+
+        border: 2px solid black;
+
+        border-radius: 6px;
+
+      "
+
+    />
+<figcaption
+
+      style="
+
+        margin-top: 8px;
+
+        font-style: italic;
+
+        font-size: 16px;
+
+      "
+
+    >
+
+      Figura 3. Oxímetro digital basado en sensor MAX30102 y ESP32.
+
+    </figcaption>
+
+  </figure>
+
+</center>
+
+        <center>
+          <h3>Conexiones</h3>
+
+          <table border="1" cellpadding="6" cellspacing="0">
+            <thead>
+              <tr>
+                <th>Componente</th>
+                <th>Pin</th>
+                <th>Conexión</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Sensor MAX30102</td>
+                <td>VIN</td>
+                <td>3.3V del ESP32</td>
+              </tr>
+              <tr>
+                <td>Sensor MAX30102</td>
+                <td>GND</td>
+                <td>GND del ESP32 </td>
+              </tr>
+              
+              
+              <tr>
+                <td>Sensor MAX30102</td>
+                <td>SDA</td>
+                <td>GPIO21 del ESP32</td>
+              </tr>
+              <tr>
+                <td>Sensor MAX30102</td>
+                <td>SCL</td>
+                <td>GPIO22 del ESP32</td>
+              </tr>
+            </tbody>
+          </table>
+        </center>
+
+              </div>
+      <hr />
+
+      <button
+        class="new_styled"
+        id="toggleCode"
+        aria-pressed="false"
+        onclick="codeBlock()"
+      >
+        Código del ESP32
+      </button>
+      <br />
+      <div id="codeBlock">
+        <h3>
+          Codigo para programar el microcontolador ESP32 usando
+          <a href="https://www.arduino.cc/en/software/">Arduino IDE</a>. Este
+          código permite leer la señales del LED rojo y del LED infrarojo (IR) del sensor MAX30102
+          a razón de 200 Hz y mandar los datos a la
+          PC a través del puerto serie a 115200 baudios.
+        </h3>
+        <pre
+          id="code1"
+          style="
+            background-color: lightblue;
+
+            margin-left: 5%;
+
+            margin-right: 5%;
+
+            border: 2px solid black;
+
+            border-radius: 6px;
+
+            padding: 10px;
+          "
+        >
+
+      #include &lt;Wire.h&gt;
+      #include "MAX30105.h"
+
+      MAX30105 particleSensor;
+
+      const byte SAMPLE_AVG    = 1;
+      const byte LED_MODE      = 2;      // Red + IR
+      const int  SAMPLE_RATE   = 200;    // SPS
+      const int  PULSE_WIDTH   = 411;    // µs
+      const int  ADC_RANGE     = 4096;
+      const byte LED_BRIGHTNESS = 70;
+
+      void setup() {
+          Serial.begin(115200);  // más rápido → menos latencia Serial
+
+          Wire.begin(21, 22);
+          Wire.setClock(400000);
+
+          if (!particleSensor.begin(Wire, I2C_SPEED_FAST)) {
+              Serial.println("# ERROR: MAX30102 no encontrado");
+              while (1);
+          }
+
+          particleSensor.setup(
+              LED_BRIGHTNESS,
+              SAMPLE_AVG,    // 1 = sin promedio → máxima resolución temporal
+              LED_MODE,
+              SAMPLE_RATE,
+              PULSE_WIDTH,
+              ADC_RANGE
+          );
+          particleSensor.clearFIFO();
+          Serial.println("# ir red t_ms");
+      }
+
+      void loop() {
+          if (particleSensor.available() == 0) {
+              particleSensor.check();  // pedir al sensor que llene el FIFO
+              return;
+          }
+
+          uint32_t ir  = particleSensor.getFIFOIR();
+          uint32_t red = particleSensor.getFIFORed();
+
+          particleSensor.nextSample();
+
+          float t_ms = micros() * 0.001f;
+          char line[48];
+          int len = snprintf(line, sizeof(line), "%lu %lu %.2f\n", red, ir, t_ms);
+          Serial.write((uint8_t*)line, len);
+      }
+</pre
+        >
+      </div>
+      <hr />
+
+      <button
+        class="new_styled"
+        id="toggleCode"
+        aria-pressed="false"
+        onclick="connectBlock()"
+      >
+        Conecta tu Oxímetro
+      </button>
+      <br />
+      <div id="connectBlock">
+        <br />       
+<div style="width:80%;">
+  
+        <input
+          class="favorite styled"
+          type="button"
+          id="SerialConnect"
+          value="Conectar"
+          onclick="connectSerial()"
+          ;
+        />
+        <label style="font-size: 15pt"> Número de Puntos en la Gráfica: </label>
+        <input id="points_max" style="width: 5%" value="1200" type="text" />
+
+        <span id="samplingRate" style="font-size: 15pt"></span>
+
+        <button class="new_styled" id="clearPlot" onclick="clearPlot()">
+          Borrar
+        </button>
+        <input
+          class="favorite styled"
+          type="button"
+          id="sensor1"
+          value="Detener"
+        />
+
+        <br />
+       
+        <div
+          id="dataPlot"
+          style="border: solid 5px #003b5c; width: 100%; background: #ffffff"
+        ></div>
+        
+        <hr />
+
+        <button
+          class="new_styled"
+          id="togglePromedio"
+          aria-pressed="false"
+          onclick="oscBlock()"
+        >
+          Datos Procesados
+        </button>
+        <br>
+       
+          
+   
+        <div id="oscBlock">
+          <label style="margin-left: 5%;">Invertir Pulsos </label>
+ <input  style="margin-left: 5%;" type="checkbox" id="invertir" checked >
+
+          <br>
+        <div
+          id="oscPlot"
+          style="border: solid 5px #003b5c; width: 100%; background: #ffffff"
+        ></div>
+
+      </div>
+      </div>
+      <hr />
+      </div>
+  
+  
+       
+  </body>
+  <script src="./OXI208May26.js"></script>
+</html>
